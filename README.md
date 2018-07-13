@@ -25,3 +25,5 @@ You must have an account with [Pingdom](https://pypi.org/project/PingdomLib/)
 TODO
 ------------
 Make this work with more than two Apache servers.
+
+Make this work with something like [Supervisor](http://supervisord.org)
