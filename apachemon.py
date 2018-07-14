@@ -195,10 +195,11 @@ def flip_hosts():
     global e
     global not200
     e = fliphost + ' ' + apache.status + ' ' + ldt + ' >10 ' + newhost + ' up'
+    oe = 'neither apache host defined as ' + fliphost + ' serious problem'
     np = fliphost + ' ' + apache.status + ' <10 ' + ' please investigate'
     not200 = e + ' though does not return 200 so urgently investigate'
 
-    # variables
+    # apache vars
     ifup = 'ifup em1:1 && sleep 2'
     ifdown = 'ifdown em1:1 && sleep 2'
     rapache = '/usr/sbin/apachectl graceful'
@@ -212,10 +213,13 @@ def flip_hosts():
                 fabric.Connection(hosta, user=user).run(ifdown)
                 fabric.Connection(hostb, user=user).run(ifup)
                 fabric.Connection(hostb, user=user).run(rapache)
-            if fliphost is hostb:
+            elif fliphost is hostb:
                 fabric.Connection(hostb, user=user).run(ifdown)
                 fabric.Connection(hosta, user=user).run(ifup)
                 fabric.Connection(hosta, user=user).run(rapache)
+            else:
+                sc.api_call("chat.postMessage", channel="#pingdom", text=oe)
+                sys.exit()
         else:
             sc.api_call("chat.postMessage", channel="#pingdom", text=np)
 
