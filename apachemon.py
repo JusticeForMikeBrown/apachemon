@@ -50,7 +50,7 @@ def ssh():
     c = '/usr/sbin/ip addr show dev '
     iface = 'em1:1'
     grep = " | grep 'inet ' | cut -d ' ' -f 6  | cut -f 1 -d '/' | grep "
-    ip = '140.251.30.43'
+    ip = 'ip'
 
     command = c + iface + grep + ip
     hosta_c = fabric.Connection(hosta, user=user)
