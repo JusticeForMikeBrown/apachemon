@@ -24,6 +24,8 @@ You must have an account with [Pingdom](https://pypi.org/project/PingdomLib/)
 
 TODO
 ------------
+Add step which detects Apache state rather than simply running graceful restart.  Would be also useful to add step which attempts another restart if HTTP 200 isn't found by urllib.
+
 Make this work with more than two Apache servers.
 
 Make this work with something like [Supervisor](http://supervisord.org)
