@@ -31,7 +31,7 @@ user = 'root'
 site = 'https://web.example.com'
 
 # defining site using its pindgom id
-apache = api.getCheck(1359632)
+apache = api.getCheck(id)
 
 # ssh() finds which apache server currently has the virtual ip
 
