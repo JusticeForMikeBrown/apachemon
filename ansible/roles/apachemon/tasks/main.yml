@@ -37,4 +37,4 @@
   delegate_to: localhost
 
 - name: restart supervisord
-  service: name=supervisor state=restarted enabled=yes
+  service: name=supervisord state=restarted enabled=yes
