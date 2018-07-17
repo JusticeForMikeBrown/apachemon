@@ -1,0 +1,14 @@
+
+service_account: apachemon
+uid: 989
+
+dns_server: dns_server
+mgmt_host: mgmt_host
+key_from: "{{ lookup('dig', '{{ mgmt_host }}', '@{{ dns_server }}')}}"
+
+device: 'em1*'
+
+privkey: apachemon_rsa
+
+apachemon_keys:
+ - { pubkey: "{{ lookup('file', 'roles/apachemon/files/id_rsa.pub') }}", option: 'from="{{ key_from }}"' }

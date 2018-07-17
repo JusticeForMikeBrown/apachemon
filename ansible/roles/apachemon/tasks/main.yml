@@ -1,0 +1,32 @@
+
+- name: create service account on local mgmt host
+  user: name={{ service_account }} uid={{ uid }} 
+        generate_ssh_key=yes ssh_key_bits=4096
+  delegate_to: localhost
+
+- name: create service account on remote apache servers
+  user: name={{ service_account }} uid={{ uid }}
+  when: inventory_hostname in groups.web
+
+- name: copy public key to ansible repo
+  copy: src=/home/apachemon/.ssh/id_rsa.pub dest=roles/apachemon/files remote_src=yes
+  delegate_to: localhost
+
+- name: deploy ssh key onto apache servers
+  tags: users,devkey
+  authorized_key: user={{ service_account }} key={{ item.pubkey }} key_options={{ item.option }}
+  with_items: "{{ apachemon_keys }}"
+
+- name: template sudo
+  tags: sudo
+  template: src=apachemon.j2 dest=/tmp/apachemon mode=0644
+  delegate_to: localhost
+
+- name: deploy sudo file
+  tags: sudo
+  copy: src=/tmp/apachemon dest=/etc/sudoers.d/apachemon owner=root group=root mode=0440 validate='visudo -cf %s'
+  when: inventory_hostname in groups.web
+
+- name: install supervisor
+  yum: name=supervisor state=present update_cache=yes
+  delegate_to: localhost

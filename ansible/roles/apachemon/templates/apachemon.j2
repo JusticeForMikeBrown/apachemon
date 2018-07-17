@@ -1,0 +1,5 @@
+
+
+# apachemon can run any command
+{{ service_account }} ALL        = (root) NOPASSWD: /usr/sbin/apachectl graceful, /usr/sbin/apachectl start, /usr/sbin/apachectl restart
+{{ service_account }} ALL        = (root) NOPASSWD: /usr/sbin/ifdown {{ device }}, /usr/sbin/ifup {{ device }}
