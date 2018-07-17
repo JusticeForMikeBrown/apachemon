@@ -12,3 +12,9 @@ privkey: apachemon_rsa
 
 apachemon_keys:
  - { pubkey: "{{ lookup('file', 'roles/apachemon/files/id_rsa.pub') }}", option: 'from="{{ key_from }}"' }
+
+
+sup_files:
+ - { name: "supervisord.conf.j2", dest: "/etc/supervisord.conf" }
+ - { name: "apachemon.conf.j2", dest: "/etc/supervisord.d/apachemon.conf" }
+

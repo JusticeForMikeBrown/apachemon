@@ -30,3 +30,11 @@
 - name: install supervisor
   yum: name=supervisor state=present update_cache=yes
   delegate_to: localhost
+
+- name: template supervisord conf files
+  template: src={{ item.name }} dest={{ item.dst }}
+  with_item: "{{ sup_files }}"
+  delegate_to: localhost
+
+- name: restart supervisord
+  service: name=supervisor state=restarted enabled=yes
