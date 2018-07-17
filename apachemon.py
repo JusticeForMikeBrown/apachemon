@@ -16,16 +16,17 @@ from slackclient import SlackClient
 
 # slack creds
 st1 = "st1"
-st2 = "st1"
+st2 = "st2"
 st = st1 + st2
 sc = SlackClient(st)
 
 # pingdom creds
 api = pingdomlib.Pingdom('user',
-                         'pass1', 'pass2')
+                         'pw1', 'pw2')
+
 # servers runnning apache
-hosta = 'apache1.example.com'
-hostb = 'apache2.example.com'
+hosta = 'servera.example.com'
+hostb = 'serverb.example.com'
 
 # virtual ip
 ip = 'ip'
@@ -41,6 +42,9 @@ apache = api.getCheck(id)
 
 # how often in seconds to run functions in this script
 run_every = 60
+
+# mins to wait when in outage before taking action
+fm = 10
 
 
 while True:
@@ -179,6 +183,8 @@ while True:
 
         # we want last downtime in dt[]
         ldt = d[-1]
+        ldt_int = int(ldt)
+        fm_str = str(fm)
 
         # slack messages sent
         global e
@@ -188,10 +194,11 @@ while True:
         # ran into line length issue
         fh = fliphost
         nh = newhost
+        astatus = apache.status
 
-        e = fh + ' ' + apache.status + ' ' + ldt + ' >10 ' + nh + ' up'
+        e = fh + ' ' + astatus + ' ' + ldt + ' >= ' + fm_str + ' ' + nh + ' up'
         oe = 'neither apache host defined as ' + nh + ' serious problem'
-        np = fh + ' ' + apache.status + ' <10 ' + ' please investigate'
+        np = fh + ' ' + astatus + ' <= ' + fm_str + ' please investigate'
         not200 = e + ' though does not return 200 so urgently investigate'
 
         # apache / network commands to be executed
@@ -199,10 +206,10 @@ while True:
         ifdown = 'sudo ifdown em1:1 && sleep 2'
         rapache = 'sudo /usr/sbin/apachectl graceful'
 
-        if apache.status == 'up':
+        if astatus == 'up':
             pass
         else:
-            if ldt >= 10:
+            if ldt_int >= fm:
                 if fliphost is hosta:
                     fabric.Connection(hosta, user=user).run(ifdown)
                     fabric.Connection(hostb, user=user).run(ifup)
