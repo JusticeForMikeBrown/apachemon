@@ -3,6 +3,8 @@
 # TODO
 # 1) solve 'else' with hostb in ssh() as no exception occurs yet clause ran
 # 2) make this work with more than two apache servers
+# 3) add exception handling to fabric.Connection in flip_hosts()
+# 4) use urllib to check site before fipping sites - what if pingdom erroneous?
 
 __author__ = 'quackmaster@protonmail.com'
 
@@ -35,13 +37,13 @@ ip = 'ip'
 user = 'apachemon'
 
 # site we're monitoring via pingdom
-site = 'https://site.example.com'
+site = 'https://pbtech.example.com'
 
 # defining site using its pindgom id
-apache = api.getCheck(id)
+apache = api.getCheck(1359632)
 
 # how often in seconds to run functions in this script
-run_every = 60
+run_every = 120
 
 # mins to wait when in outage before taking action
 fm = 10
@@ -89,15 +91,25 @@ while True:
     def check_outage():
 
         global d
+        global ldt
+        global ldt_int
+
         # outages() prints all recent outages - only want last one
         # so putting all in new list which will be used in flip_hosts()
         d = []
 
         if apache.status != 'up':
+
+            # define ldt and others here
             for outage in apache.outages():
 
                 # append outages to new list
                 d.append("%d" % ((outage['timeto'] - outage['timefrom']) / 60))
+        else:
+            d.append('up')
+
+        # needed for flip_hosts()
+        ldt = d[-1]
 
     check_outage()
 
@@ -181,25 +193,30 @@ while True:
     # you will also need to configure sudo access
     def flip_hosts():
 
-        # we want last downtime in dt[]
-        ldt = d[-1]
-        ldt_int = int(ldt)
-        fm_str = str(fm)
+        global n200
 
-        # slack messages sent
-        global e
-        global not200
-
-        # using fh for messages only
-        # ran into line length issue
+        # using fh, nh, astatus for messages only
+        # ran into line length issue with message lines
         fh = fliphost
         nh = newhost
         astatus = apache.status
 
-        e = fh + ' ' + astatus + ' ' + ldt + ' >= ' + fm_str + ' ' + nh + ' up'
+        # need below far for 'e' message only
+        # given if statement in check_outage()
+        dt = ldt
+
+        # need string not int in below error error message 'e'
+        fm_str = str(fm)
+
+        # slack messages being sent
+        # e = error mesage sent when downtime exists
+        # oe = message sent when other error found
+        # np = message sent when downtime exists though lt threshold (fm_str)
+        # not200 = message sent when site not returning HTTP 200
+        e = fh + ' ' + astatus + ' ' + dt + ' >= ' + fm_str + ' ' + nh + ' up'
         oe = 'neither apache host defined as ' + nh + ' serious problem'
-        np = fh + ' ' + astatus + ' <= ' + fm_str + ' please investigate'
-        not200 = e + ' though does not return 200 so urgently investigate'
+        np = fh + ' ' + astatus + ' <= ' + fm_str + ' please check services'
+        n200 = e + ' though does not return 200 so urgently investigate'
 
         # apache / network commands to be executed
         ifup = 'sudo ifup em1:1 && sleep 2'
@@ -209,6 +226,7 @@ while True:
         if astatus == 'up':
             pass
         else:
+            ldt_int = int(ldt)
             if ldt_int >= fm:
                 if fliphost is hosta:
                     fabric.Connection(hosta, user=user).run(ifdown)
@@ -232,8 +250,8 @@ while True:
     def check_site():
 
         code = urllib.urlopen(site).getcode()
-        if code == 200:
-                sc.api_call("chat.postMessage", channel="#pingdom", text=e)
+        if code != 200:
+                sc.api_call("chat.postMessage", channel="#pingdom", text=n200)
         else:
-            sc.api_call("chat.postMessage", channel="#pingdom", text=not200)
+            pass
     check_site()
