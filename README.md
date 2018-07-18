@@ -22,10 +22,20 @@ You must have an account with [Pingdom](https://pypi.org/project/PingdomLib/)
 
 [Slackclient](https://pypi.org/project/slackclient/)
 
+[Supervisor](http://supervisord.org/)
+
+Ansible Role
+------------
+
+This repository also contains a skeleton Ansible role which deploys a service account on a local ***mgmt host*** as well as remote Apache servers.
+
+In this instance mgmt host would be a server that runs the apachemon service managed by Supervisor.
+
+The role's designed to be ran against Apache servers whereas some tasks run on localhost.  So the server from which you run Ansible should be considered the mgmt host.
+
 TODO
 ------------
 Add step which detects Apache state rather than simply running graceful restart.  Would be also useful to add step which attempts another restart if HTTP 200 isn't found by urllib.
 
 Make this work with more than two Apache servers.
 
-Make this work with something like [Supervisor](http://supervisord.org)

@@ -13,7 +13,7 @@
   delegate_to: localhost
 
 - name: deploy ssh key onto apache servers
-  tags: users,devkey
+  tags: users
   authorized_key: user={{ service_account }} key={{ item.pubkey }} key_options={{ item.option }}
   with_items: "{{ apachemon_keys }}"
 
@@ -36,5 +36,11 @@
   with_item: "{{ sup_files }}"
   delegate_to: localhost
 
+- name: deploy apachemon.py script
+  tags: deploy
+  copy: src=../apachemon.py dest=/tmp owner=root group=apachemon mode=0770
+  delegate_to: localhost
+
 - name: restart supervisord
   service: name=supervisord state=restarted enabled=yes
+  delegate_to: localhost
