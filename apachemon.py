@@ -37,10 +37,10 @@ ip = 'ip'
 user = 'apachemon'
 
 # site we're monitoring via pingdom
-site = 'https://pbtech.example.com'
+site = 'https://error.example.com'
 
 # defining site using its pindgom id
-apache = api.getCheck(1359632)
+apache = api.getCheck(id)
 
 # how often in seconds to run functions in this script
 run_every = 120
