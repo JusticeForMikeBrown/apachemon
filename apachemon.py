@@ -10,6 +10,7 @@ __author__ = 'quackmaster@protonmail.com'
 
 import pingdomlib
 import fabric
+from paramiko import ssh_exception
 import urllib
 import sys
 import time
@@ -24,20 +25,19 @@ sc = SlackClient(st)
 
 # pingdom creds
 api = pingdomlib.Pingdom('user',
-                         'pw1', 'pw2')
-
+                         'key', 'secret')
 # servers runnning apache
-hosta = 'servera.example.com'
-hostb = 'serverb.example.com'
+hosta = 'a.example.com'
+hostb = 'b.example.com'
 
 # virtual ip
 ip = 'ip'
 
 # ssh user for fabric.Connection
-user = 'apachemon'
+user = 'user'
 
 # site we're monitoring via pingdom
-site = 'https://error.example.com'
+site = 'https://site.example.com'
 
 # defining site using its pindgom id
 apache = api.getCheck(id)
@@ -48,11 +48,11 @@ run_every = 120
 # mins to wait when in outage before taking action
 fm = 10
 
+_outer_loop_ = True
 
-while True:
+while _outer_loop_:
     time.sleep(run_every)
 
-    # ssh() finds which apache server currently has the virtual ip
     def ssh():
 
         # below used in find_hosts()
@@ -64,8 +64,8 @@ while True:
         iface = 'em1:1'
         grep = " | grep 'inet ' | cut -d ' ' -f 6  | cut -f 1 -d '/' | grep "
         command = c + iface + grep + ip
-        hosta_c = fabric.Connection(hosta, user=user)
-        hostb_c = fabric.Connection(hostb, user=user)
+        hosta_c = fabric.Connection(hosta, user=user, connect_timeout=5)
+        hostb_c = fabric.Connection(hostb, user=user, connect_timeout=5)
 
         # slack message sent if another exception occurs
         # which will result in sys.exit()
@@ -73,17 +73,55 @@ while True:
         # hostb_emsg = "error with ssh() to " + hostb
 
         # must define None as ssh() will exit with Exception when host lacks IP
-        try:
-            hosta_r = hosta_c.run(command, hide=True)
-        except UnexpectedExit:
-            hosta_r = None
-            pass
+        _inner_a_ = True
 
-        try:
-            hostb_r = hostb_c.run(command, hide=True)
-        except UnexpectedExit:
-            hostb_r = None
-            pass
+        while _inner_a_:
+            try:
+                hosta_r = hosta_c.run(command, hide=True)
+                sys.stdout.write(hosta + ' has ' + ip + '\n')
+                sys.stdout.flush()
+            except UnexpectedExit:
+                sys.stdout.write(hosta + ' does not have ' + ip + '\n')
+                sys.stdout.flush()
+                hosta_r = None
+                pass
+                break
+            except ssh_exception.NoValidConnectionsError:
+                sys.stdout.write(hosta + ' connection failed - exiting... \n')
+                sys.stdout.flush()
+                raise
+                sys.exit()
+            except KeyError:
+                sys.stdout.write(hosta + ' server-side account error \n')
+                sys.stdout.write.flush()
+                continue
+            else:
+                break
+
+        _inner_b_ = True
+
+        while _inner_b_:
+            try:
+                hostb_r = hostb_c.run(command, hide=True)
+                sys.stdout.write(hostb + ' has ' + ip + '\n')
+                sys.stdout.flush()
+            except UnexpectedExit:
+                sys.stdout.write(hostb + ' does not have ' + ip + '\n')
+                sys.stdout.flush()
+                hostb_r = None
+                pass
+                break
+            except ssh_exception.NoValidConnectionsError:
+                sys.stdout.write(hostb + ' connection failed - exiting... \n')
+                sys.stdout.flush()
+                raise
+                sys.exit()
+            except KeyError:
+                sys.stdout.write(hostb + ' server-side account error \n')
+                sys.stdout.flush()
+                continue
+            else:
+                break
 
     ssh()
 
@@ -225,6 +263,8 @@ while True:
 
         if astatus == 'up':
             pass
+            sys.stdout.write(site + ' up via pingdom check' + '\n')
+            sys.stdout.flush()
         else:
             ldt_int = int(ldt)
             if ldt_int >= fm:
@@ -253,5 +293,7 @@ while True:
         if code != 200:
                 sc.api_call("chat.postMessage", channel="#pingdom", text=n200)
         else:
+            sys.stdout.write(site + ' up via urllib check' + '\n')
+            sys.stdout.flush()
             pass
     check_site()
