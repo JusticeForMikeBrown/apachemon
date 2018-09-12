@@ -66,11 +66,6 @@ while _outer_loop_:
         hosta_c = fabric.Connection(hosta, user=user, connect_timeout=5)
         hostb_c = fabric.Connection(hostb, user=user, connect_timeout=5)
 
-        # slack message sent if another exception occurs
-        # which will result in sys.exit()
-        # hosta_emsg = "error with ssh() to " + hosta
-        # hostb_emsg = "error with ssh() to " + hostb
-
         # must define None as ssh() will exit with Exception when host lacks IP
         _inner_a_ = True
 
