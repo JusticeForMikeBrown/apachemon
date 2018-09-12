@@ -39,3 +39,5 @@ Add step which detects Apache state rather than simply running graceful restart.
 
 Make this work with more than two Apache servers.
 
+Reboot server out of band using iDRAC if exception occurs.
+
