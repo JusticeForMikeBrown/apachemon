@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 # TODO
-# 1) solve 'else' with hostb in ssh() as no exception occurs yet clause ran
-# 2) make this work with more than two apache servers
-# 3) add exception handling to fabric.Connection in flip_hosts()
-# 4) use urllib to check site before fipping sites - what if pingdom erroneous?
+# 1) make this work with more than two apache servers
+# 2) use urllib to check site before fipping sites - what if pingdom erroneous?
+# 3) reboot server if ssh exception occurs using idrac
 
 __author__ = 'quackmaster@protonmail.com'
 
@@ -80,10 +79,12 @@ while _outer_loop_:
                 hosta_r = hosta_c.run(command, hide=True)
                 sys.stdout.write(hosta + ' has ' + ip + '\n')
                 sys.stdout.flush()
+                hosta_c.close()
             except UnexpectedExit:
                 sys.stdout.write(hosta + ' does not have ' + ip + '\n')
                 sys.stdout.flush()
                 hosta_r = None
+                hosta_c.close()
                 pass
                 break
             except ssh_exception.NoValidConnectionsError:
@@ -94,6 +95,7 @@ while _outer_loop_:
             except KeyError:
                 sys.stdout.write(hosta + ' server-side account error \n')
                 sys.stdout.write.flush()
+                hosta_c.close()
                 continue
             else:
                 break
@@ -105,10 +107,12 @@ while _outer_loop_:
                 hostb_r = hostb_c.run(command, hide=True)
                 sys.stdout.write(hostb + ' has ' + ip + '\n')
                 sys.stdout.flush()
+                hostb_c.close()
             except UnexpectedExit:
                 sys.stdout.write(hostb + ' does not have ' + ip + '\n')
                 sys.stdout.flush()
                 hostb_r = None
+                hostb_c.close()
                 pass
                 break
             except ssh_exception.NoValidConnectionsError:
@@ -119,6 +123,7 @@ while _outer_loop_:
             except KeyError:
                 sys.stdout.write(hostb + ' server-side account error \n')
                 sys.stdout.flush()
+                hostb_c.close()
                 continue
             else:
                 break
